@@ -1,0 +1,232 @@
+// Graph X Design - "Merino" Public API
+//
+// Version: 11
+//
+syntax = "proto3";
+
+package gxd.merino.public;
+
+// Time
+//
+// Timestamps which include seconds are in UTC.
+message DateTime {
+	uint32 year   = 1;  // Full 4 digits
+	uint32 month  = 2;  // 1..12
+	uint32 day    = 3;  // 1..31
+	uint32 second = 4;  // 0..86401 (why 1? leap seconds...)
+}
+
+// Localisation
+//
+// Because fields are all optional in protobuf3, Text is functionally equivalent to the map<Language,string> we'd prefer,
+// especially in JSON, though lowercased.  We still use Language where we can.
+
+enum Language {
+	FR = 0;
+	EN = 1;
+}
+
+message Text {
+	string fr = 1;
+	string en = 2;
+}
+
+enum Currency {
+	CAD = 0;
+	USD = 1;
+}
+
+message Amount {
+	sint32   mills    = 1;  // 1/10 of a currency's smallest unit (i.e. 1/1000 of 1$, 1/10 of 1¢)
+	Currency currency = 2;  // If omitted, defaults to the current user's setting found in ProfileResponse.contact.currency
+}
+
+enum PayType {
+	NONE           = 0;
+	PURCHASE_ORDER = 1;
+	ACCOUNT        = 2;
+	CREDIT_CARD    = 3;
+	CHECK          = 4;
+}
+
+
+// General
+//
+
+message Contact {
+	string          email    = 1;
+	Currency        currency = 2;
+	Language        language = 3;
+	Text            name     = 4;
+	Text            company  = 5;
+	repeated string street   = 6;
+	string          city     = 7;
+	string          state    = 8;  // ISO-Alpha2 code (i.e. QC)
+	string          country  = 9;  // ISO-Alpha3 code (i.e. CAN)
+	string          zip      = 10;
+	string          phone    = 11;
+	string          fax      = 12;
+	string          url      = 13;
+}
+
+// Shipping rates
+//
+// Orders are charged a base fee plus the rate for any excess beyond the user's allocation:
+//
+//    base_fee + (excess_rate * max(0, total_weight - Profile.base_weight) / 1000)
+//
+message ShippingRate {
+	string  country     = 1;  // ISO-Alpha3 code (i.e. CAN)
+	string  state       = 2;  // ISO-Alpha2 code (i.e. QC)
+	Amount  base_fee    = 3;  // Minimum shipping fee
+	Amount  excess_rate = 4;  // Additional fee PER POUND of weight exceeding Profile.base_weight
+}
+
+// Fulfillment RPC
+message FulfillmentRequest {}
+message FulfillmentResponse {
+	repeated Contact      contacts       = 1;  // Our supply-side addresses
+	repeated ShippingRate shipping_rates = 2;  // This field is omitted/empty for realms without distinct shipping fees
+}
+
+// Profile RPC: introspection about the currently authenticated user
+message ProfileRequest {}
+message ProfileResponse {
+	Contact          contact     = 1;
+	repeated PayType pay_types   = 2;  // Allowed for this account
+	uint32           base_weight = 3;  // Weight included in ShippingRate.base_fee for this user, in 1/1000 of a pound
+	Amount           order_floor = 4;  // Minimum subtotal to accept a new order
+	Amount           order_min   = 5;  // Minimum subtotal to avoid small order surcharge
+	Amount           order_fee   = 6;  // Surcharge for orders with subtotal < order_min
+}
+
+
+// Products
+//
+
+message ProductColor {
+	string id   = 1;
+	uint32 rgb  = 2;  // 24-bit RGB value, in hexadecimal
+	Text   name = 3;
+}
+message ProductSize {
+	string id   = 1;
+	Text   name = 2;
+}
+
+message Subproduct {
+	string             sku       = 1;
+	string             size_id   = 2;
+	repeated string    color_ids = 3;  // Some products have pairs of colors
+	map<uint32,Amount> prices    = 4;  // Minimum quantity -> unit price
+}
+
+message Product {
+	string               sku            = 1;
+	Text                 name           = 2;
+	Text                 description    = 3;
+	Text                 notes          = 4;
+	Text                 visual         = 5;  // Describes pre-branded products
+	uint32               qty_minimum    = 6;
+	uint32               qty_step       = 7;  // Usually 1, but some products are sold in groupings (i.e. dozens)
+	uint32               weight         = 8;  // Unit: 1/1000 of a pound, for each individual product of any size
+	repeated Subproduct  subproducts    = 9;
+	repeated Text        features       = 10;  // i.e. "Water resistant"
+	repeated string      thumbnail_urls = 11;
+	repeated string      photo_urls     = 12;
+	repeated string      related_skus   = 13;
+}
+
+// Product RPC
+message ProductRequest {
+	oneof _ProductRequest_oneof {
+		// Return a list of all products by default, with minimal details: sku, name, qty_minimim, qty_step, weight
+		string get       = 1;  // Return specific product by SKU, including subproducts and extended details
+		bool   inventory = 3;  // Return inventory (set to true)
+	}
+}
+message ProductResponse {
+	// Only one of these will be set.
+	Product             product   = 1;
+	repeated Product    products  = 2;
+	map <string,uint32> inventory = 3;  // Subproduct SKU -> quantity available
+
+	// Useful information referenced in the above
+	map <string,ProductSize>  sizes  = 6;
+	map <string,ProductColor> colors = 7;
+}
+
+
+// Carts / Bids / Orders / Invoices
+//
+// 1. User submits a Cart
+// 2. We return OrderReceipts upon queueing, for your reference
+// 3. type=ORDER starts fulfillment, type=BID awaits further communication
+
+enum InvoiceType {
+	INVOICE = 0;
+	ORDER   = 1;
+	BID     = 3;
+}
+
+message Cart {
+	message CartLine {
+		string sku = 1;
+		uint32 qty = 2;
+	}
+	repeated CartLine  lines      = 1;
+	string             directives = 2;
+	Contact            contact    = 3;
+	InvoiceType        type       = 4;  // Assumed ORDER unless specified as BID if you need to discuss prior to fulfillment
+	PayType            pay_type   = 5;  // ACCOUNT is currently assumed, but you should still specify it
+}
+
+message OrderConfirmation {
+	uint32   id        = 1;
+	DateTime created   = 2;  // Official creation timestamp
+	Amount   total     = 3;  // TEMPORARY grand total: our accounting system may slightly affect it
+	DateTime ship_date = 4;  // Expected date of shipping the final product (only for type=ORDER)
+}
+
+// Invoice RPC
+message InvoiceRequest {
+	oneof _InvoiceRequest_oneof {
+		Cart put_cart = 6;
+	}
+}
+message InvoiceResponse {
+	repeated OrderConfirmation order_confirmations = 1;  // Some carts may be split into several orders
+}
+
+
+// Top-level RPC
+//
+
+message Request {
+	uint64 magic          = 1;  // Optional unique identifier for this request
+	oneof _Request_oneof {
+		ProfileRequest     profile_request     = 3;
+		FulfillmentRequest fulfillment_request = 4;
+		ProductRequest     product_request     = 5;
+		InvoiceRequest     invoice_request     = 6;
+	}
+}
+
+message Response {
+	uint64 magic   = 1;  // Your optional unique identifier echoed back so you may match our responses with your requests
+	oneof _Response_oneof {
+		string              error                = 2;  // Defined instead of your expected response below, on failure
+		ProfileResponse     profile_response     = 3;
+		FulfillmentResponse fulfillment_response = 4;
+		ProductResponse     product_response     = 5;
+		InvoiceResponse     invoice_response     = 6;
+	}
+}
+
+message Message {
+	string            security_token = 2;  // Mandatory, the API access token we provided you
+	string            security_realm = 3;  // API access realm (usually userid or corporate program ID)
+	repeated Request  requests       = 4;
+	repeated Response responses      = 5;
+	string            status         = 6;  // Protocol-level status or error message
+}
