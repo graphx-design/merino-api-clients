@@ -1,6 +1,6 @@
 // Graph X Design - "Merino" Public API
 //
-// Version: 7.11
+// Version: 7.12
 //
 syntax = "proto3";
 
