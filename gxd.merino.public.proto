@@ -135,6 +135,8 @@ message Product {
 	repeated string      thumbnail_urls = 11;
 	repeated string      photo_urls     = 12;
 	repeated string      related_skus   = 13;
+	string               category       = 14;  // Short code for internal classification
+	string               model          = 15;  // Corporate programs: short code or SKU of source product
 }
 
 // Product RPC

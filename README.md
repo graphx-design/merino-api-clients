@@ -10,7 +10,9 @@ This JSON-via-HTTPS service allows our registered users access to our product de
 
 ## Usage
 
-The service is at: <https://www.gxd.ca/api/merino>  You will need the security realm and token we supplied in order to authenticate your requests.
+The service is at: <https://www.gxd.ca/api/merino>
+
+You will need the security realm and token we supplied in order to authenticate your requests.
 
 Clients issue HTTP POST requests to that URL with content-type "application/json" containing exactly one `Message` object, to which the service will respond with a single `Message` object as well.  The definition for its structure is detailed in the file [gxd.merino.public.proto](https://github.com/graphx-design/merino-api-clients/blob/master/gxd.merino.public.proto).  Details about each individual field is documented directly in comments in this file, so please read it thouroughly.
 
