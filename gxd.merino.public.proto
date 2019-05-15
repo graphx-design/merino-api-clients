@@ -1,6 +1,6 @@
 // Graph X Design - "Merino" Public API
 //
-// Version: 7.12
+// Version: 7.20
 //
 syntax = "proto3";
 
@@ -71,15 +71,26 @@ message Contact {
 
 // Shipping rates
 //
-// Orders are charged a base fee plus the rate for any excess beyond the user's allocation:
+// Each rate should contain EITHER a state or a zip_range:
+//
+// * Zip/postal code range has priority.  For example, if a zip_range is
+//   specified for beginning "H3C" and end "H3N", this implies that code
+//   "H3F 3P3" would match regardless if a matching state rate also exists.
+//
+// * If the zip/postal code of interest is not found by code range, match by
+//   state/province instead.
+//
+// Orders are charged a base fee plus the rate for any excess beyond the user's
+// allocation:
 //
 //    base_fee + (excess_rate * max(0, total_weight - Profile.base_weight) / 1000)
 //
 message ShippingRate {
-	string  country     = 1;  // ISO-Alpha3 code (i.e. CAN)
-	string  state       = 2;  // ISO-Alpha2 code (i.e. QC)
-	Amount  base_fee    = 3;  // Minimum shipping fee
-	Amount  excess_rate = 4;  // Additional fee PER POUND of weight exceeding Profile.base_weight
+	string          country     = 1;  // ISO-Alpha3 code (i.e. CAN)
+	string          state       = 2;  // ISO-Alpha2 code (i.e. QC)
+	repeated string zip_range   = 5;  // Beginning and end of range (i.e. [H3C, H3N])
+	Amount          base_fee    = 3;  // Minimum shipping fee
+	Amount          excess_rate = 4;  // Additional fee PER POUND of weight exceeding Profile.base_weight
 }
 
 // Fulfillment RPC
