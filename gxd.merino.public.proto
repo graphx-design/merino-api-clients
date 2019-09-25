@@ -61,8 +61,8 @@ message Contact {
 	Text            company  = 5;
 	repeated string street   = 6;
 	string          city     = 7;
-	string          state    = 8;  // ISO-Alpha2 code (i.e. QC)
-	string          country  = 9;  // ISO-Alpha3 code (i.e. CAN)
+	string          state    = 8;  // ISO-3166-2 alpha-2 code without country prefix (i.e. "QC")
+	string          country  = 9;  // ISO-3166-1 alpha-3 code (i.e. "CAN")
 	string          zip      = 10;
 	string          phone    = 11;
 	string          fax      = 12;
@@ -86,9 +86,9 @@ message Contact {
 //    base_fee + (excess_rate * max(0, total_weight - Profile.base_weight) / 1000)
 //
 message ShippingRate {
-	string          country     = 1;  // ISO-Alpha3 code (i.e. CAN)
-	string          state       = 2;  // ISO-Alpha2 code (i.e. QC)
-	repeated string zip_range   = 5;  // Beginning and end of range (i.e. [H3C, H3N])
+	string          country     = 1;  // ISO-3166-1 alpha-3 code (i.e. "CAN")
+	string          state       = 2;  // ISO-3166-2 alpha-2 code without country prefix (i.e. "QC")
+	repeated string zip_range   = 5;  // Beginning and end of range (i.e. ["H3C", "H3N"])
 	Amount          base_fee    = 3;  // Minimum shipping fee
 	Amount          excess_rate = 4;  // Additional fee PER POUND of weight exceeding Profile.base_weight
 }

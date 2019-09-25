@@ -16,7 +16,7 @@ You will need the security realm and token we supplied in order to authenticate 
 
 Clients issue HTTP POST requests to that URL with content-type "application/json" containing exactly one `Message` object, to which the service will respond with a single `Message` object as well.  The definition for its structure is detailed in the file [gxd.merino.public.proto](https://github.com/graphx-design/merino-api-clients/blob/master/gxd.merino.public.proto).  Details about each individual field is documented directly in comments in this file, so please read it thouroughly.
 
-While Protocol Buffers are used to define this exchange, **the Merino API is not a gRPC end point**.  It also does not support binary encoding, only JSON.  See <https://developers.google.com/protocol-buffers/docs/proto3#json> for how the field names translate directly to familiar JSON objects.  Note that per this spec, we accept both `snake_case` and `camelCase` property name formats, but we always emit the preferred `camelCase` while the definition file is declared in `snake_case`, for compatibility with the broadest set of implementations possible.
+While Protocol Buffers are used to define this exchange, **the Merino API is not a gRPC end point**.  It also does not support binary encoding, only JSON.  See <https://developers.google.com/protocol-buffers/docs/proto3#json> for how the field names translate directly to familiar JSON objects.  Note that per this spec, we accept both `snake_case` and `camelCase` property name formats, but we always emit the preferred `camelCase` while the definition file is declared in `snake_case`, for compatibility with the broadest set of implementations possible.  We also expect strings, not integers, for enumerations.
 
 ## LICENSE AND COPYRIGHT
 
