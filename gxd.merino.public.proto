@@ -1,6 +1,6 @@
 // Graph X Design - "Merino" Public API
 //
-// Version: 7.20
+// Version: 7.21
 //
 syntax = "proto3";
 
@@ -142,7 +142,6 @@ message Product {
 	uint32               qty_step       = 7;  // Usually 1, but some products are sold in groupings (i.e. dozens)
 	uint32               weight         = 8;  // Unit: 1/1000 of a pound, for each individual product of any size
 	repeated Subproduct  subproducts    = 9;
-	repeated Text        features       = 10;  // i.e. "Water resistant"
 	repeated string      thumbnail_urls = 11;
 	repeated string      photo_urls     = 12;
 	repeated string      related_skus   = 13;
