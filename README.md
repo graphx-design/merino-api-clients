@@ -22,7 +22,7 @@ While Protocol Buffers are used to define this exchange, **the Merino API is not
 
 The usage examples and client libraries provided in this repository are:
 
-Copyright (c) 2018-2019 Graph X Design Inc. <https://www.gxd.ca/>
+Copyright (c) 2018-2020 Graph X Design Inc. <https://www.gxd.ca/>
 
 Distributed under the MIT (X11) License:
 http://www.opensource.org/licenses/mit-license.php

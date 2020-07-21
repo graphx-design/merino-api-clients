@@ -1,6 +1,6 @@
 // Graph X Design - "Merino" Public API
 //
-// Version: 7.21
+// Version: 7.22
 //
 syntax = "proto3";
 
@@ -18,9 +18,12 @@ message DateTime {
 
 // Localisation
 //
-// Because fields are all optional in protobuf3, Text is functionally equivalent to the map<Language,string> we'd prefer,
-// especially in JSON, though lowercased.  We still use Language where we can.
+// Because fields are all optional in protobuf3, Text is functionally
+// equivalent to the map<Language,string> we'd prefer if Protobuf allowed enums
+// as keys, especially in JSON, although lowercased.  We still use Language
+// where we can.
 
+// ISO-639-1 alpha-2 code
 enum Language {
 	FR = 0;
 	EN = 1;
@@ -31,13 +34,98 @@ message Text {
 	string en = 2;
 }
 
+// ISO-4217 alpha-3 code
 enum Currency {
 	CAD = 0;
 	USD = 1;
+	EUR = 2;
+}
+
+// ISO-3166-1 alpha-3 code
+enum Country {
+	CAN = 0;
+	USA = 1;
+	FRA = 2;
+}
+
+// ISO-3166-2 alpha-2 code without country prefix
+enum State {
+	AB = 1;
+	AK = 16;
+	AL = 17;
+	AR = 18;
+	AS = 19;
+	AZ = 20;
+	BC = 2;
+	CA = 21;
+	CO = 22;
+	CT = 23;
+	DC = 24;
+	DE = 25;
+	FL = 26;
+	GA = 27;
+	GU = 28;
+	HI = 29;
+	IA = 30;
+	ID = 31;
+	IL = 32;
+	IN = 33;
+	KS = 34;
+	KY = 35;
+	LA = 36;
+	MA = 37;
+	MB = 3;
+	MD = 38;
+	ME = 39;
+	MI = 40;
+	MN = 41;
+	MO = 42;
+	MP = 43;
+	MS = 44;
+	MT = 45;
+	NB = 4;
+	NC = 46;
+	ND = 47;
+	NE = 48;
+	NH = 49;
+	NJ = 50;
+	NL = 5;
+	NM = 51;
+	NS = 6;
+	NT = 7;
+	NU = 8;
+	NV = 52;
+	NY = 53;
+	OH = 54;
+	OK = 55;
+	ON = 9;
+	OR = 56;
+	PA = 57;
+	PE = 10;
+	PM = 73;
+	PR = 58;
+	QC = 0;
+	RI = 59;
+	SC = 60;
+	SD = 61;
+	SK = 11;
+	TN = 62;
+	TX = 63;
+	UM = 64;
+	UT = 65;
+	VA = 66;
+	VI = 67;
+	VT = 68;
+	WA = 69;
+	WI = 70;
+	WV = 71;
+	WY = 72;
+	YT = 12;
+	// Next: 74
 }
 
 message Amount {
-	sint32   mills    = 1;  // 1/10 of a currency's smallest unit (i.e. 1/1000 of 1$, 1/10 of 1¢)
+	sint32   mills    = 1;  // 1/10 of a currency's smallest unit (i.e. 1/1000 of 1$, 1/10 of 1 cent)
 	Currency currency = 2;  // If omitted, defaults to the current user's setting found in ProfileResponse.contact.currency
 }
 
@@ -61,8 +149,8 @@ message Contact {
 	Text            company  = 5;
 	repeated string street   = 6;
 	string          city     = 7;
-	string          state    = 8;  // ISO-3166-2 alpha-2 code without country prefix (i.e. "QC")
-	string          country  = 9;  // ISO-3166-1 alpha-3 code (i.e. "CAN")
+	State           state    = 8;
+	Country         country  = 9;
 	string          zip      = 10;
 	string          phone    = 11;
 	string          fax      = 12;
@@ -86,8 +174,8 @@ message Contact {
 //    base_fee + (excess_rate * max(0, total_weight - Profile.base_weight) / 1000)
 //
 message ShippingRate {
-	string          country     = 1;  // ISO-3166-1 alpha-3 code (i.e. "CAN")
-	string          state       = 2;  // ISO-3166-2 alpha-2 code without country prefix (i.e. "QC")
+	Country         country     = 1;
+	State           state       = 2;
 	repeated string zip_range   = 5;  // Beginning and end of range (i.e. ["H3C", "H3N"])
 	Amount          base_fee    = 3;  // Minimum shipping fee
 	Amount          excess_rate = 4;  // Additional fee PER POUND of weight exceeding Profile.base_weight
@@ -116,12 +204,12 @@ message ProfileResponse {
 //
 
 message ProductColor {
-	string id   = 1;
+	string id   = 1;  // Redundant in map context
 	uint32 rgb  = 2;  // 24-bit RGB value, in hexadecimal
 	Text   name = 3;
 }
 message ProductSize {
-	string id   = 1;
+	string id   = 1;  // Redundant in map context
 	Text   name = 2;
 }
 
@@ -158,7 +246,7 @@ message ProductRequest {
 	}
 }
 message ProductResponse {
-	// Only one of these will be set.
+	// Only one of these will be set.  (Protobuf prevents repeated inside oneof.)
 	Product             product   = 1;
 	repeated Product    products  = 2;
 	map <string,uint32> inventory = 3;  // Subproduct SKU -> quantity available
@@ -169,41 +257,40 @@ message ProductResponse {
 }
 
 
-// Carts / Bids / Orders / Invoices
+// Bids / Orders
 //
-// 1. User submits a Cart
-// 2. We return OrderReceipts upon queueing, for your reference
+// 1. User submits an OrderDraft
+// 2. We return OrderConfirmations upon queueing, for your reference
 // 3. type=ORDER starts fulfillment, type=BID awaits further communication
 
-enum InvoiceType {
-	INVOICE = 0;
-	ORDER   = 1;
-	BID     = 3;
-}
-
-message Cart {
-	message CartLine {
+message OrderDraft {
+	enum Type {
+		INVOICE = 0;  // Reserved for future use
+		ORDER   = 1;
+		BID     = 3;
+	}
+	message Line {
 		string sku = 1;
 		uint32 qty = 2;
 	}
-	repeated CartLine  lines      = 1;
-	string             directives = 2;
-	Contact            contact    = 3;
-	InvoiceType        type       = 4;  // Assumed ORDER unless specified as BID if you need to discuss prior to fulfillment
-	PayType            pay_type   = 5;  // ACCOUNT is currently assumed, but you should still specify it
+	repeated Line lines      = 1;
+	string        directives = 2;
+	Contact       contact    = 3;
+	Type          type       = 4;  // Assumed ORDER unless specified as BID if you need to discuss prior to fulfillment
+	PayType       pay_type   = 5;  // ACCOUNT is currently assumed, but you should still specify it
 }
 
 message OrderConfirmation {
 	uint32   id        = 1;
 	DateTime created   = 2;  // Official creation timestamp
 	Amount   total     = 3;  // TEMPORARY grand total: our accounting system may slightly affect it
-	DateTime ship_date = 4;  // Expected date of shipping the final product (only for type=ORDER)
+	DateTime ship_date = 4;  // Expected date of shipping (only for type=ORDER)
 }
 
 // Invoice RPC
 message InvoiceRequest {
 	oneof _InvoiceRequest_oneof {
-		Cart put_cart = 6;
+		OrderDraft put_cart = 6;  // Name preserved for JSON backwards-compatibility
 	}
 }
 message InvoiceResponse {
@@ -215,7 +302,7 @@ message InvoiceResponse {
 //
 
 message Request {
-	uint64 magic          = 1;  // Optional unique identifier for this request
+	uint64 magic = 1;  // Optional unique identifier for this request
 	oneof _Request_oneof {
 		ProfileRequest     profile_request     = 3;
 		FulfillmentRequest fulfillment_request = 4;
@@ -225,7 +312,7 @@ message Request {
 }
 
 message Response {
-	uint64 magic   = 1;  // Your optional unique identifier echoed back so you may match our responses with your requests
+	uint64 magic = 1;  // Your optional unique identifier echoed back so you may match our responses with your requests
 	oneof _Response_oneof {
 		string              error                = 2;  // Defined instead of your expected response below, on failure
 		ProfileResponse     profile_response     = 3;
