@@ -6,7 +6,7 @@ Documentation and sample client code for our Merino API.
 
 ## Introduction
 
-This JSON-via-HTTPS service allows our registered users access to our product details and to place orders without using the web site per se.  If you require managing the user interface for your purchases but don't want to dive into cXML PunchOut support, this API is for you.
+This JSON-via-HTTPS service allows our registered users access to our product details and to place orders without using the web site per se.  If you require managing the user interface for your purchases but don't want to dive into cXML or EDI X12 support, this API is for you.
 
 ## Usage
 
@@ -22,7 +22,7 @@ While Protocol Buffers are used to define this exchange, **the Merino API is not
 
 The usage examples and client libraries provided in this repository are:
 
-Copyright (c) 2018-2020 Graph X Design Inc. <https://www.gxd.ca/>
+Copyright (c) 2018-2021 Graph X Design Inc. <https://www.gxd.ca/>
 
 Distributed under the MIT (X11) License:
 http://www.opensource.org/licenses/mit-license.php

@@ -1,6 +1,6 @@
 // Graph X Design - "Merino" Public API
 //
-// Version: 7.22
+// Version: 7.31-TRANSITIONAL
 //
 syntax = "proto3";
 
@@ -214,14 +214,18 @@ message ProductSize {
 }
 
 message Subproduct {
-	string             sku       = 1;
+	string             eid       = 1;   // Extended ID (up to 30 chars)
+	string             cid       = 11;  // Compact ID (8 chars)
+	string             sku       = 101;  // XXX: DEPRECATED
 	string             size_id   = 2;
 	repeated string    color_ids = 3;  // Some products have pairs of colors
 	map<uint32,Amount> prices    = 4;  // Minimum quantity -> unit price
 }
 
 message Product {
-	string               sku            = 1;
+	string               eid            = 1;  // Extended ID (up to 15 chars)
+	string               cid            = 21; // Compact ID (8 chars)
+	string               sku            = 101;  // XXX: DEPRECATED
 	Text                 name           = 2;
 	Text                 description    = 3;
 	Text                 notes          = 4;
@@ -232,24 +236,33 @@ message Product {
 	repeated Subproduct  subproducts    = 9;
 	repeated string      thumbnail_urls = 11;
 	repeated string      photo_urls     = 12;
-	repeated string      related_skus   = 13;
+	repeated string      related_eids   = 13;
+	repeated string      related_cids   = 23;
+	repeated string      related_skus   = 113;  // XXX: DEPRECATED
 	string               category       = 14;  // Short code for internal classification
-	string               model          = 15;  // Corporate programs: short code or SKU of source product
+	string               model          = 15;  // Corporate programs: short name of source product
 }
 
 // Product RPC
+enum ProductIDType {
+	UNSPECIFIED_PRODUCTIDTYPE = 0;
+	EID = 1;
+	CID = 2;
+}
 message ProductRequest {
 	oneof _ProductRequest_oneof {
-		// Return a list of all products by default, with minimal details: sku, name, qty_minimim, qty_step, weight
-		string get       = 1;  // Return specific product by SKU, including subproducts and extended details
-		bool   inventory = 3;  // Return inventory (set to true)
+		// Return a list of all products by default, with minimal details: IDs, name, qty_minimim, qty_step, weight
+		string        get       = 1;  // Return specific product by SKU|EID|CID, including subproducts and extended details
+		ProductIDType stock     = 3;  // Return stock levels
+		bool          inventory = 103;  // Return inventory (set to true) XXX: DEPRECATED
 	}
 }
 message ProductResponse {
 	// Only one of these will be set.  (Protobuf prevents repeated inside oneof.)
-	Product             product   = 1;
-	repeated Product    products  = 2;
-	map <string,uint32> inventory = 3;  // Subproduct SKU -> quantity available
+	Product             product  = 1;
+	repeated Product    products = 2;
+	map <string,uint32> stock    = 3;  // Subproduct EID|CID (as requested) -> quantity available
+	map <string,uint32> inventory = 103;  // XXX: DEPRECATED
 
 	// Useful information referenced in the above
 	map <string,ProductSize>  sizes  = 6;
@@ -270,8 +283,10 @@ message OrderDraft {
 		BID     = 3;
 	}
 	message Line {
-		string sku = 1;
-		uint32 qty = 2;
+		string eid = 1;
+		string cid = 2;
+		string sku = 101;  // XXX: DEPRECATED
+		uint32 qty = 4;
 	}
 	repeated Line lines      = 1;
 	string        directives = 2;
