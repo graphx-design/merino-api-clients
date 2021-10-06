@@ -35,7 +35,7 @@ Applications which cannot handle our Extended IDs may use our Compact IDs instea
 * `Subproduct.cid` — Replaces `sku`
 * `Product.eid` — Replaces `sku`
 * `Product.cid` — Replaces `sku`
-* `ProductRequest.stock` — Replaces `stock` and specifies which of EID or CID to use in response.
+* `ProductRequest.stock` — Replaces `inventory` and specifies which of EID or CID to use in response.
 * `ProductResponse.stock` — Replaces `inventory`, details quantity available per EID or CID.
 * `OrderDraft.Line.eid` — Replaces `sku`
 * `OrderDraft.Line.cid` — Replaces `sku`
