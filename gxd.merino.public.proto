@@ -236,8 +236,8 @@ message Product {
 	repeated Subproduct  subproducts    = 9;
 	repeated string      thumbnail_urls = 11;
 	repeated string      photo_urls     = 12;
-	repeated string      related_eids   = 13;
-	repeated string      related_cids   = 23;
+	repeated string      related_eids   = 13;  // Set if requested by EID
+	repeated string      related_cids   = 23;  // Set if requested by CID
 	repeated string      related_skus   = 113;  // XXX: DEPRECATED
 	string               category       = 14;  // Short code for internal classification
 	string               model          = 15;  // Corporate programs: short name of source product
@@ -252,9 +252,9 @@ enum ProductIDType {
 message ProductRequest {
 	oneof _ProductRequest_oneof {
 		// Return a list of all products by default, with minimal details: IDs, name, qty_minimim, qty_step, weight
-		string        get       = 1;  // Return specific product by SKU|EID|CID, including subproducts and extended details
-		ProductIDType stock     = 3;  // Return stock levels
-		bool          inventory = 103;  // Return inventory (set to true) XXX: DEPRECATED
+		string        get       = 1;  // Return specific product by EID|CID|SKU, including subproducts and extended details
+		ProductIDType stock     = 3;  // Return stock levels by EID or CID
+		bool          inventory = 103;  // Return inventory by SKU (set to true) XXX: DEPRECATED
 	}
 }
 message ProductResponse {
