@@ -39,3 +39,8 @@ Applications which cannot handle our Extended IDs may use our Compact IDs instea
 * `ProductResponse.stock` — Replaces `inventory`, details quantity available per EID or CID.
 * `OrderDraft.Line.eid` — Replaces `sku`
 * `OrderDraft.Line.cid` — Replaces `sku`
+
+### New Order Status
+
+* `Shipment` — Courier-specific tracking information
+* `InvoiceRequest.get_status` — Takes a list of order IDs and returns a list of `OrderConfirmation`

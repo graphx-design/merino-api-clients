@@ -1,6 +1,6 @@
 // Graph X Design - "Merino" Public API
 //
-// Version: 7.40
+// Version: 7.41
 //
 syntax = "proto3";
 
@@ -181,6 +181,26 @@ message ShippingRate {
 	Amount          excess_rate = 4;  // Additional fee PER POUND of weight exceeding Profile.base_weight
 }
 
+// Shipment
+message Shipment {
+	enum Courier {
+		UNSPECIFIED_COURIER = 0;
+		BOURRET             = 11;
+		CANPAR              = 8;
+		DCE                 = 13;
+		DHL                 = 6;
+		DICOM               = 7;
+		FEDEX               = 17;
+		LABRANCHE           = 14;
+		PICKUP              = 1;
+		POSTESCANADA        = 5;
+		PUROLATOR           = 2;
+		UPS                 = 9;
+	}
+	Courier          courier  = 1;
+	repeated string  ref      = 2;  // Tracking numbers (usually just one)
+}
+
 // Fulfillment RPC
 message FulfillmentRequest {}
 message FulfillmentResponse {
@@ -294,13 +314,14 @@ message OrderConfirmation {
 	DateTime created   = 2;  // Official creation timestamp
 	Amount   total     = 3;  // TEMPORARY grand total: our accounting system may slightly affect it
 	DateTime ship_date = 4;  // Expected date of shipping (only for type=ORDER)
+  repeated Shipment shipments = 5;  // Only set when there are known shipments
 }
 
 // Invoice RPC
 message InvoiceRequest {
-	oneof _InvoiceRequest_oneof {
-		OrderDraft put_cart = 6;  // Name preserved for JSON backwards-compatibility
-	}
+	// NOTE: Only one field will be processed.  (Protobuf prevents repeated inside oneof.)
+	OrderDraft         put_cart   = 6;  // Name preserved for JSON backwards-compatibility
+	repeated uint32    get_status = 7;  // Order IDs, returns order confirmations
 }
 message InvoiceResponse {
 	repeated OrderConfirmation order_confirmations = 1;  // Some carts may be split into several orders
