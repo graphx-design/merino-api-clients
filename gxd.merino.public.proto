@@ -1,6 +1,6 @@
 // Graph X Design - "Merino" Public API
 //
-// Version: 7.41
+// Version: 7.50-PREVIEW
 //
 syntax = "proto3";
 
@@ -13,7 +13,7 @@ message DateTime {
 	uint32 year   = 1;  // Full 4 digits
 	uint32 month  = 2;  // 1..12
 	uint32 day    = 3;  // 1..31
-	uint32 second = 4;  // 0..86401 (why 1? leap seconds...)
+	uint32 second = 4;  // 0..86400
 }
 
 // Localisation
@@ -138,10 +138,21 @@ enum PayType {
 }
 
 
-// General
+// Contacts
 //
 
+message PromoCode {
+  string   code         = 2;
+  DateTime valid_from   = 3;
+  DateTime valid_until  = 4;
+  uint32   orders_max   = 5;
+  float    rebate_pct   = 6;
+  Amount   amount_max   = 7;
+  bool     skip_min_fee = 8;
+}
+
 message Contact {
+  uint32          id       = 15;  // Assigned by server when referring to permanent users
 	string          email    = 1;
 	Currency        currency = 2;
 	Language        language = 3;
@@ -155,7 +166,45 @@ message Contact {
 	string          phone    = 11;
 	string          fax      = 12;
 	string          url      = 13;
+  repeated PromoCode promo_codes = 14;  // Read-only: see ContactRequest.codes
 }
+
+// Contact RPC
+message ContactRequest {
+  message Codes {
+    uint32 contact_id = 1;
+
+    // Add promo codes
+    //
+    // Reusable codes (i.e. "SUMMER2020") and unassigned single-use codes (i.e.
+    // "12345-67890") may be assigned to users here.  For reusable codes, this
+    // gives a private copy of the offer to the user.  For single-use codes, it
+    // permanently assigns the unique offer to this user; no other user will be
+    // able to redeem it.
+    repeated string add = 3;
+
+    // Invalidate promo codes
+    //
+    // Codes already assigned to a specific user may be invalidated, which
+    // internally resets the "valid_until" date to yesterday at the time of the
+    // request.
+    //
+    // THIS IS IRREVERSIBLE.  A user may never regain access to an expired
+    // offer.
+    repeated string del = 4;
+  }
+  repeated uint32 get   = 1;  // Get details about users by ID
+  Contact         put   = 2;  // Create/update a user (leave id unset to create)
+  Codes           codes = 3;
+}
+message ContactResponse {
+  repeated Contact contacts    = 1;  // For: get
+  repeated uint32  contact_ids = 2;  // Successful updates, for: put, codes
+}
+
+
+// Shipping
+//
 
 // Shipping rates
 //
@@ -298,30 +347,42 @@ message OrderDraft {
 		BID     = 3;
 	}
 	message Line {
-		string eid = 1;
-		string cid = 2;
+		string eid = 1;  // Subproduct EID
+		string cid = 2;  // Subproduct CID
 		uint32 qty = 4;
 	}
 	repeated Line lines      = 1;
 	string        directives = 2;
-	Contact       contact    = 3;
+	Contact       contact    = 3;  // In this context, Contact.id is ignored
 	Type          type       = 4;  // Assumed ORDER unless specified as BID if you need to discuss prior to fulfillment
 	PayType       pay_type   = 5;  // ACCOUNT is currently assumed, but you should still specify it
 }
 
 message OrderConfirmation {
+  message OrderProduct {
+    string eid = 1;  // Product EID (not Subproduct)
+    uint32 qty = 4;  // Aggregate quantity, all subproducts combined
+  }
+  message OrderCode {
+    string code  = 1;
+    Amount value = 2;  // How much it was worth in this order, before taxes
+  }
 	uint32   id        = 1;
+  Contact  contact   = 5;  // Only id will be set if it is a registered user
 	DateTime created   = 2;  // Official creation timestamp
 	Amount   total     = 3;  // TEMPORARY grand total: our accounting system may slightly affect it
 	DateTime ship_date = 4;  // Expected date of shipping (only for type=ORDER)
-  repeated Shipment shipments = 5;  // Only set when there are known shipments
+  repeated Shipment     shipments = 6;  // Only set when there are known shipments
+  repeated OrderProduct products  = 7;
+  repeated OrderCode    codes     = 8;
 }
 
 // Invoice RPC
 message InvoiceRequest {
 	// NOTE: Only one field will be processed.  (Protobuf prevents repeated inside oneof.)
-	OrderDraft         put_cart   = 6;  // Name preserved for JSON backwards-compatibility
-	repeated uint32    get_status = 7;  // Order IDs, returns order confirmations
+	OrderDraft      put_cart   = 6;  // Name preserved for JSON backwards-compatibility
+	repeated uint32 get_status = 7;  // Order IDs, returns order confirmations
+  uint32          get_news   = 9;  // Get up to 100 confirmations more recent than this
 }
 message InvoiceResponse {
 	repeated OrderConfirmation order_confirmations = 1;  // Some carts may be split into several orders
@@ -338,6 +399,7 @@ message Request {
 		FulfillmentRequest fulfillment_request = 4;
 		ProductRequest     product_request     = 5;
 		InvoiceRequest     invoice_request     = 6;
+    ContactRequest     contact_request     = 7;
 	}
 }
 
@@ -349,6 +411,7 @@ message Response {
 		FulfillmentResponse fulfillment_response = 4;
 		ProductResponse     product_response     = 5;
 		InvoiceResponse     invoice_response     = 6;
+    ContactResponse     contact_response     = 7;
 	}
 }
 
