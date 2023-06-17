@@ -382,7 +382,7 @@ message InvoiceRequest {
 	// NOTE: Only one field will be processed.  (Protobuf prevents repeated inside oneof.)
 	OrderDraft      put_cart   = 6;  // Name preserved for JSON backwards-compatibility
 	repeated uint32 get_status = 7;  // Order IDs, returns order confirmations
-  uint32          get_news   = 9;  // Get up to 100 confirmations more recent than this
+  uint32          get_since  = 9;  // Get up to 100 confirmations more recent than this
 }
 message InvoiceResponse {
 	repeated OrderConfirmation order_confirmations = 1;  // Some carts may be split into several orders
