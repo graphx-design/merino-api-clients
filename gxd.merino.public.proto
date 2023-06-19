@@ -246,8 +246,10 @@ message Shipment {
 		PUROLATOR           = 2;
 		UPS                 = 9;
 	}
-	Courier          courier  = 1;
-	repeated string  ref      = 2;  // Tracking numbers (usually just one)
+  uint32           id        = 1;  // Unique number, chronologically sortable
+	Courier          courier   = 2;
+	repeated string  ref       = 3;  // Tracking numbers (usually just one)
+  repeated uint32  order_ids = 8;  // Orders involved
 }
 
 // Fulfillment RPC
@@ -367,7 +369,7 @@ message OrderConfirmation {
     string code  = 1;
     Amount value = 2;  // How much it was worth in this order, before taxes
   }
-	uint32   id        = 1;
+	uint32   id        = 1;  // Unique number, chronologically sortable
   Contact  contact   = 5;  // Only id will be set if it is a registered user
 	DateTime created   = 2;  // Official creation timestamp
 	Amount   total     = 3;  // TEMPORARY grand total: our accounting system may slightly affect it
@@ -380,12 +382,14 @@ message OrderConfirmation {
 // Invoice RPC
 message InvoiceRequest {
 	// NOTE: Only one field will be processed.  (Protobuf prevents repeated inside oneof.)
-	OrderDraft      put_cart   = 6;  // Name preserved for JSON backwards-compatibility
-	repeated uint32 get_status = 7;  // Order IDs, returns order confirmations
-  uint32          get_since  = 9;  // Get up to 100 confirmations more recent than this
+	OrderDraft      put_cart      = 6;  // Name preserved for JSON backwards-compatibility
+	repeated uint32 get_status    = 7;  // Order IDs, returns order confirmations
+  uint32          get_shipments = 8;  // Get 100 next shipments after this SHIPMENT ID
+  uint32          get_orders    = 9;  // Get 100 order confirmations made after this ORDER ID
 }
 message InvoiceResponse {
 	repeated OrderConfirmation order_confirmations = 1;  // Some carts may be split into several orders
+  repeated Shipment          shipments           = 2;
 }
 
 
