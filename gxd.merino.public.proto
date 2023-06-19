@@ -172,22 +172,23 @@ message Contact {
 // Contact RPC
 message ContactRequest {
   message Codes {
-    uint32 contact_id = 1;
+    repeated uint32 contact_ids = 1;
 
     // Add promo codes
     //
     // Reusable codes (i.e. "SUMMER2020") and unassigned single-use codes (i.e.
     // "12345-67890") may be assigned to users here.  For reusable codes, this
-    // gives a private copy of the offer to the user.  For single-use codes, it
-    // permanently assigns the unique offer to this user; no other user will be
-    // able to redeem it.
+    // gives a private copy of the offer to each user.
+    //
+    // For single-use codes, it permanently assigns the unique offer to one
+    // user; no other user will be able to redeem it.  Therefore, you must
+    // assign those codes with one distinct request per user.
     repeated string add = 3;
 
     // Invalidate promo codes
     //
-    // Codes already assigned to a specific user may be invalidated, which
-    // internally resets the "valid_until" date to yesterday at the time of the
-    // request.
+    // Codes already assigned to users may be invalidated, which internally
+    // resets their "valid_until" date to yesterday at the time of the request.
     //
     // THIS IS IRREVERSIBLE.  A user may never regain access to an expired
     // offer.
@@ -370,7 +371,7 @@ message OrderConfirmation {
     Amount value = 2;  // How much it was worth in this order, before taxes
   }
 	uint32   id        = 1;  // Unique number, chronologically sortable
-  Contact  contact   = 5;  // Only id will be set if it is a registered user
+  Contact  contact   = 5;  // Only id will be set in this context
 	DateTime created   = 2;  // Official creation timestamp
 	Amount   total     = 3;  // TEMPORARY grand total: our accounting system may slightly affect it
 	DateTime ship_date = 4;  // Expected date of shipping (only for type=ORDER)
