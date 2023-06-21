@@ -200,7 +200,8 @@ message ContactRequest {
 }
 message ContactResponse {
   repeated Contact contacts    = 1;  // For: get
-  repeated uint32  contact_ids = 2;  // Successful updates, for: put, codes
+  repeated uint32  contact_ids = 2;  // Successful updates, for: put
+           string  status      = 3;  // Summary, for: codes
 }
 
 
