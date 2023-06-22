@@ -142,17 +142,17 @@ enum PayType {
 //
 
 message PromoCode {
-  string   code         = 2;
-  DateTime valid_from   = 3;
-  DateTime valid_until  = 4;
-  uint32   orders_max   = 5;
-  float    rebate_pct   = 6;
-  Amount   amount_max   = 7;
-  bool     skip_min_fee = 8;
+	string   code         = 2;
+	DateTime valid_from   = 3;
+	DateTime valid_until  = 4;
+	uint32   orders_max   = 5;
+	float    rebate_pct   = 6;
+	Amount   amount_max   = 7;
+	bool     skip_min_fee = 8;
 }
 
 message Contact {
-  uint32          id       = 15;  // Assigned by server when referring to permanent users
+	uint32          id       = 15;  // Assigned by server when referring to permanent users
 	string          email    = 1;
 	Currency        currency = 2;
 	Language        language = 3;
@@ -166,42 +166,42 @@ message Contact {
 	string          phone    = 11;
 	string          fax      = 12;
 	string          url      = 13;
-  repeated PromoCode promo_codes = 14;  // Read-only: see ContactRequest.codes
+	repeated PromoCode promo_codes = 14;  // Read-only: see ContactRequest.codes
 }
 
 // Contact RPC
 message ContactRequest {
-  message Codes {
-    repeated uint32 contact_ids = 1;
+	message Codes {
+		repeated uint32 contact_ids = 1;
 
-    // Add promo codes
-    //
-    // Reusable codes (i.e. "SUMMER2020") and unassigned single-use codes (i.e.
-    // "12345-67890") may be assigned to users here.  For reusable codes, this
-    // gives a private copy of the offer to each user.
-    //
-    // For single-use codes, it permanently assigns the unique offer to one
-    // user; no other user will be able to redeem it.  Therefore, you must
-    // assign those codes with one distinct request per user.
-    repeated string add = 3;
+		// Add promo codes
+		//
+		// Reusable codes (i.e. "SUMMER2020") and unassigned single-use codes (i.e.
+		// "12345-67890") may be assigned to users here.  For reusable codes, this
+		// gives a private copy of the offer to each user.
+		//
+		// For single-use codes, it permanently assigns the unique offer to one
+		// user; no other user will be able to redeem it.  Therefore, you must
+		// assign those codes with one distinct request per user.
+		repeated string add = 3;
 
-    // Invalidate promo codes
-    //
-    // Codes already assigned to users may be invalidated, which internally
-    // resets their "valid_until" date to yesterday at the time of the request.
-    //
-    // THIS IS IRREVERSIBLE.  A user may never regain access to an expired
-    // offer.
-    repeated string del = 4;
-  }
-  repeated uint32 get   = 1;  // Get details about users by ID
-  Contact         put   = 2;  // Create/update a user (leave id unset to create)
-  Codes           codes = 3;
+		// Invalidate promo codes
+		//
+		// Codes already assigned to users may be invalidated, which internally
+		// resets their "valid_until" date to yesterday at the time of the request.
+		//
+		// THIS IS IRREVERSIBLE.  A user may never regain access to an expired
+		// offer.
+		repeated string del = 4;
+	}
+	repeated uint32 get   = 1;  // Get details about users by ID
+	Contact         put   = 2;  // Create/update a user (leave id unset to create)
+	Codes           codes = 3;
 }
 message ContactResponse {
-  repeated Contact contacts    = 1;  // For: get
-  repeated uint32  contact_ids = 2;  // Successful updates, for: put
-           string  status      = 3;  // Summary, for: codes
+	repeated Contact contacts    = 1;  // For: get
+	repeated uint32  contact_ids = 2;  // Successful updates, for: put
+	         string  status      = 3;  // Summary, for: codes
 }
 
 
@@ -248,10 +248,10 @@ message Shipment {
 		PUROLATOR           = 2;
 		UPS                 = 9;
 	}
-  uint32           id        = 1;  // Unique number, chronologically sortable
+	uint32           id        = 1;  // Unique number, chronologically sortable
 	Courier          courier   = 2;
 	repeated string  ref       = 3;  // Tracking numbers (usually just one)
-  repeated uint32  order_ids = 8;  // Orders involved
+	repeated uint32  order_ids = 8;  // Orders involved
 }
 
 // Fulfillment RPC
@@ -363,22 +363,22 @@ message OrderDraft {
 }
 
 message OrderConfirmation {
-  message OrderProduct {
-    string eid = 1;  // Product EID (not Subproduct)
-    uint32 qty = 4;  // Aggregate quantity, all subproducts combined
-  }
-  message OrderCode {
-    string code  = 1;
-    Amount value = 2;  // How much it was worth in this order, before taxes
-  }
+	message OrderProduct {
+		string eid = 1;  // Product EID (not Subproduct)
+		uint32 qty = 4;  // Aggregate quantity, all subproducts combined
+	}
+	message OrderCode {
+		string code  = 1;
+		Amount value = 2;  // How much it was worth in this order, before taxes
+	}
 	uint32   id        = 1;  // Unique number, chronologically sortable
-  Contact  contact   = 5;  // Only id will be set in this context
+	Contact  contact   = 5;  // Only id will be set in this context
 	DateTime created   = 2;  // Official creation timestamp
 	Amount   total     = 3;  // TEMPORARY grand total: our accounting system may slightly affect it
 	DateTime ship_date = 4;  // Expected date of shipping (only for type=ORDER)
-  repeated Shipment     shipments = 6;  // Only set when there are known shipments
-  repeated OrderProduct products  = 7;
-  repeated OrderCode    codes     = 8;
+	repeated Shipment     shipments = 6;  // Only set when there are known shipments
+	repeated OrderProduct products  = 7;
+	repeated OrderCode    codes     = 8;
 }
 
 // Invoice RPC
@@ -386,12 +386,12 @@ message InvoiceRequest {
 	// NOTE: Only one field will be processed.  (Protobuf prevents repeated inside oneof.)
 	OrderDraft      put_cart      = 6;  // Name preserved for JSON backwards-compatibility
 	repeated uint32 get_status    = 7;  // Order IDs, returns order confirmations
-  uint32          get_shipments = 8;  // Get 100 next shipments after this SHIPMENT ID
-  uint32          get_orders    = 9;  // Get 100 order confirmations made after this ORDER ID
+	uint32          get_shipments = 8;  // Get 100 next shipments after this SHIPMENT ID
+	uint32          get_orders    = 9;  // Get 100 order confirmations made after this ORDER ID
 }
 message InvoiceResponse {
 	repeated OrderConfirmation order_confirmations = 1;  // Some carts may be split into several orders
-  repeated Shipment          shipments           = 2;
+	repeated Shipment          shipments           = 2;
 }
 
 
@@ -405,7 +405,7 @@ message Request {
 		FulfillmentRequest fulfillment_request = 4;
 		ProductRequest     product_request     = 5;
 		InvoiceRequest     invoice_request     = 6;
-    ContactRequest     contact_request     = 7;
+		ContactRequest     contact_request     = 7;
 	}
 }
 
@@ -417,13 +417,14 @@ message Response {
 		FulfillmentResponse fulfillment_response = 4;
 		ProductResponse     product_response     = 5;
 		InvoiceResponse     invoice_response     = 6;
-    ContactResponse     contact_response     = 7;
+		ContactResponse     contact_response     = 7;
 	}
 }
 
 message Message {
 	string            security_token = 2;  // Mandatory, the API access token we provided you
 	string            security_realm = 3;  // API access realm (usually userid or corporate program ID)
+	bool              test_mode      = 7;  // Read-only mode: real data, but write operations fake
 	repeated Request  requests       = 4;
 	repeated Response responses      = 5;
 	string            status         = 6;  // Protocol-level status or error message
