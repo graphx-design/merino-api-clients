@@ -1,6 +1,6 @@
 // Graph X Design - "Merino" Public API
 //
-// Version: 7.50
+// Version: 7.51
 //
 syntax = "proto3";
 
@@ -166,6 +166,7 @@ message Contact {
 	string          phone    = 11;
 	string          fax      = 12;
 	string          url      = 13;
+	string          login    = 16;  // URL, valid for 12 hours
 	repeated PromoCode promo_codes = 14;  // Read-only: see ContactRequest.codes
 }
 
